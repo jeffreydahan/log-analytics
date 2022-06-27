@@ -1,0 +1,15 @@
+// Join all tables
+union *
+// Set time range ex:  ago(1h)   ago(30d)
+| where TimeGenerated > ago(30d)
+// good practice to focus only on what is billable
+| where _IsBillable == true
+// summary:  set the "by" to what you would like the grouping for
+| summarize IngestedVolumeMB = sum(_BilledSize/1024/1024) by _ResourceId, Resource, ResourceGroup, ResourceType, Category, Type
+| extend EstCostUSD = (IngestedVolumeMB/1024) * 2.30
+// Remove this column
+| project-away _ResourceId
+// Limit returned resources
+| top 50 by IngestedVolumeMB
+// Sort descending
+| sort by IngestedVolumeMB desc
